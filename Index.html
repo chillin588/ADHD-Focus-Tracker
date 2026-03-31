@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FOCUS.APP</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --accent: #f5a623;
+    --accent-dim: #3a2a08;
+    --bg: #0e0e10;
+    --card: #18181b;
+    --border: #2a2a2e;
+    --text: #f0efe9;
+    --muted: #666;
+    --green: #4ade80;
+  }
+  .light {
+    --bg: #f5f4f0;
+    --card: #ffffff;
+    --border: #e2e0d8;
+    --text: #1a1a18;
+    --muted: #999;
+    --accent-dim: #fef3d7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', 'Fira Mono', monospace;
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Header */
+  .header {
+    position: sticky; top: 0; z-index: 50;
+    background: color-mix(in srgb, var(--bg) 90%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .streak-badge { font-size: 0.75rem; color: var(--muted); }
+  .icon-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
+    font-family: inherit; transition: all 0.2s;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+  /* Score pill */
+  .score-card {
+    margin: 16px 16px 0;
+    border: 1px solid var(--border);
+    background: var(--card);
+    border-radius: 14px; padding: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .score-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+  .score-dots { display: flex; gap: 4px; align-items: flex-end; }
+  .dot {
+    width: 22px; height: 22px; border-radius: 4px;
+    transition: all 0.3s;
+  }
+  .score-num { font-size: 1.6rem; font-weight: 700; margin-left: 8px; line-height: 1; }
+  .score-num small { font-size: 0.9rem; color: var(--muted); font-weight: 400; }
+  /* Nav tabs */
+  .nav {
+    margin: 12px 16px 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 4px;
+    display: flex; gap: 4px;
+  }
+  .tab-btn {
+    flex: 1; padding: 10px 4px; border-radius: 10px;
+    border: none; background: none; cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); transition: all 0.2s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { background: var(--accent); color: #0e0e10; }
+  /* Content */
+  .content { padding: 16px; padding-bottom: 40px; display: flex; flex-direction: column; gap: 12px; }
+  /* Cards */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px;
+  }
+  .section-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px; }
+  /* Tasks */
+  .task-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .task-row { display: flex; align-items: center; gap: 8px; }
+  .task-num { font-size: 0.7rem; font-weight: 700; color: var(--muted); flex-shrink: 0; }
+  .task-input {
+    flex: 1; background: none; border: none; outline: none;
+    color: var(--text); font-family: 'DM Mono', monospace;
+    font-size: 0.95rem; font-weight: 500;
+    caret-color: var(--accent);
+  }
+  .task-input::placeholder { color: var(--muted); }
+  .clear-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.75rem; padding: 2px 4px; }
+  .must-win-btn {
+    width: 100%; padding: 10px; border-radius: 10px;
+    border: 1px solid var(--border); background: none;
+    cursor: pointer; font-family: 'DM Mono', monospace;
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); transition: all 0.2s;
+  }
+  .must-win-btn:hover { border-color: var(--accent); }
+  .must-win-btn.active { background: var(--accent); border-color: var(--accent); color: #0e0e10; }
+  .must-win-highlight {
+    border-radius: 14px; padding: 14px;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    background: var(--accent-dim);
+  }
+  .must-win-tag { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); margin-bottom: 4px; }
+  .must-win-text { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+  /* Timer */
+  .timer-wrap { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .ring-container { position: relative; width: 180px; height: 180px; transition: transform 0.3s; }
+  .ring-container.pulse { animation: pulse 0.4s ease; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.07)} }
+  svg.timer-ring { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 8; }
+  .ring-fg { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.5s; }
+  .timer-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .timer-digits { font-family: 'Syne', sans-serif; font-size: 2.4rem; font-weight: 800; letter-spacing: -2px; line-height: 1; }
+  .timer-mode { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+  .timer-controls { display: flex; gap: 10px; width: 100%; }
+  .btn-primary {
+    flex: 1; padding: 16px; border-radius: 12px; border: none;
+    background: var(--accent); color: #0e0e10;
+    font-family: 'DM Mono', monospace; font-size: 0.85rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary.paused { background: var(--border); color: var(--text); }
+  .btn-reset {
+    padding: 16px 18px; border-radius: 12px;
+    border: 1px solid var(--border); background: none;
+    color: var(--muted); font-size: 1.1rem; cursor: pointer;
+    font-family: inherit; transition: all 0.2s;
+  }
+  .btn-reset:hover { border-color: var(--accent); color: var(--accent); }
+  .sprint-progress { width: 100%; }
+  .sprint-bars { display: flex; gap: 8px; margin-top: 6px; }
+  .sprint-bar-wrap { flex: 1; height: 6px; border-radius: 99px; background: var(--border); overflow: hidden; }
+  .sprint-bar-fill { height: 100%; border-radius: 99px; background: var(--accent); width: 0%; transition: width 0.5s ease; }
+  .sprint-info { font-size: 0.7rem; color: var(--muted); margin-top: 6px; }
+  /* Score checks */
+  .check-item {
+    width: 100%; background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer; transition: all 0.2s; text-align: left;
+  }
+  .check-item:hover { border-color: var(--accent); }
+  .check-item.checked { border-color: var(--accent); background: var(--accent-dim); }
+  .check-icon {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; background: var(--border);
+    transition: all 0.2s;
+  }
+  .check-item.checked .check-icon { background: var(--accent); }
+  .check-label { font-size: 0.85rem; font-weight: 500; color: var(--muted); line-height: 1.4; }
+  .check-item.checked .check-label { color: var(--text); }
+  .score-summary {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px; text-align: center;
+  }
+  .score-big { font-family: 'Syne', sans-serif; font-size: 4rem; font-weight: 800; line-height: 1; transition: color 0.3s; }
+  .score-msg { font-size: 0.8rem; color: var(--muted); margin-top: 8px; }
+  /* Week */
+  .week-header { display: flex; justify-content: space-between; align-items: baseline; }
+  .week-total { font-size: 1.3rem; font-weight: 700; }
+  .week-total small { font-size: 0.8rem; color: var(--muted); font-weight: 400; }
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 110px; padding: 12px 0 4px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; }
+  .bar-score-label { font-size: 0.65rem; font-weight: 700; min-height: 14px; }
+  .bar-wrap { flex: 1; display: flex; align-items: flex-end; width: 100%; }
+  .bar { width: 100%; border-radius: 4px 4px 0 0; min-height: 4px; transition: height 0.6s ease; }
+  .bar-day { font-size: 0.65rem; color: var(--muted); }
+  .bar-day.today { color: var(--accent); font-weight: 700; }
+  .streak-card { display: flex; justify-content: space-between; align-items: center; }
+  .streak-num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; }
+  .btn-small {
+    padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
+    background: none; color: var(--muted); cursor: pointer;
+    font-family: 'DM Mono', monospace; font-size: 0.7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em; transition: all 0.2s;
+  }
+  .btn-small:hover { border-color: var(--accent); color: var(--accent); }
+  .perf-list { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; }
+  .perf-item { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted); }
+  .perf-item.active { color: var(--accent); font-weight: 700; }
+  .perf-pts { font-size: 0.65rem; color: var(--muted); }
+  /* Distraction */
+  .distraction-btn {
+    width: 100%; padding: 16px; border-radius: 14px;
+    border: 2px solid var(--border); background: none;
+    color: var(--muted); cursor: pointer;
+    font-family: 'DM Mono', monospace; font-size: 0.8rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em; transition: all 0.2s;
+  }
+  .distraction-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .distraction-msg {
+    border-radius: 14px; padding: 16px; text-align: center;
+    border: 2px solid var(--accent); background: var(--accent-dim);
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+  .distraction-head { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--accent); }
+  .distraction-sub { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+  /* Hidden */
+  .hidden { display: none !important; }
+  /* Tab panels */
+  .tab-panel { display: flex; flex-direction: column; gap: 12px; }
+  /* Responsive */
+  @media (min-width: 480px) {
+    .tab-btn { font-size: 0.7rem; }
+    .timer-digits { font-size: 2.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+
+<header class="header">
+  <div class="logo"><span>FOCUS</span>.APP</div>
+  <div class="header-right">
+    <span class="streak-badge" id="streakBadge">🔥 0d</span>
+    <button class="icon-btn" id="darkToggle">☀</button>
+  </div>
+</header>
+
+<!-- Score pill -->
+
+<div class="score-card">
+  <div>
+    <div class="score-label">Today's Score</div>
+    <div class="score-dots">
+      <div class="dot" id="dot0"></div>
+      <div class="dot" id="dot1"></div>
+      <div class="dot" id="dot2"></div>
+      <span class="score-num" id="scoreNum">0<small>/3</small></span>
+    </div>
+  </div>
+  <div style="text-align:right">
+    <div class="score-label">Sprints</div>
+    <div class="score-num" id="sprintBadge">0<small>/3+</small></div>
+  </div>
+</div>
+
+<!-- Nav tabs -->
+
+<nav class="nav">
+  <button class="tab-btn active" data-tab="tasks">📋 Tasks</button>
+  <button class="tab-btn" data-tab="timer">⏱ Timer</button>
+  <button class="tab-btn" data-tab="score">✓ Score</button>
+  <button class="tab-btn" data-tab="week">📊 Week</button>
+</nav>
+
+<!-- Content -->
+
+<main class="content">
+
+  <!-- TASKS TAB -->
+
+  <div class="tab-panel" id="tab-tasks">
+    <div class="section-label">Max 3 Tasks — Pick 1 Must Win</div>
+
+```
+<div class="task-card" id="taskCard0">
+  <div class="task-row">
+    <span class="task-num">1</span>
+    <input class="task-input" id="task0" placeholder="Most important task..." maxlength="80" />
+    <button class="clear-btn hidden" id="clear0">✕</button>
+  </div>
+</div>
+<div class="task-card" id="taskCard1">
+  <div class="task-row">
+    <span class="task-num">2</span>
+    <input class="task-input" id="task1" placeholder="Task 2..." maxlength="80" />
+    <button class="clear-btn hidden" id="clear1">✕</button>
+  </div>
+</div>
+<div class="task-card" id="taskCard2">
+  <div class="task-row">
+    <span class="task-num">3</span>
+    <input class="task-input" id="task2" placeholder="Task 3..." maxlength="80" />
+    <button class="clear-btn hidden" id="clear2">✕</button>
+  </div>
+</div>
+
+<div class="must-win-highlight hidden" id="mustWinDisplay">
+  <div class="must-win-tag">⭐ Must Win Today</div>
+  <div class="must-win-text" id="mustWinText"></div>
+</div>
+```
+
+  </div>
+
+  <!-- TIMER TAB -->
+
+  <div class="tab-panel hidden" id="tab-timer">
+    <div class="section-label" id="timerLabel">🔥 Focus Sprint — Sprint #1</div>
+    <div class="card timer-wrap">
+      <div class="ring-container" id="ringContainer">
+        <svg class="timer-ring" width="180" height="180" viewBox="0 0 180 180">
+          <circle class="ring-bg" cx="90" cy="90" r="72" />
+          <circle class="ring-fg" id="ringFg" cx="90" cy="90" r="72"
+            stroke="#f5a623"
+            stroke-dasharray="452.39"
+            stroke-dashoffset="452.39" />
+        </svg>
+        <div class="timer-center">
+          <div class="timer-digits" id="timerDisplay">20:00</div>
+          <div class="timer-mode" id="timerMode">WORK</div>
+        </div>
+      </div>
+
+```
+  <div class="timer-controls">
+    <button class="btn-primary" id="startStopBtn">▶ START</button>
+    <button class="btn-reset" id="resetBtn">↺</button>
+  </div>
+
+  <div class="sprint-progress">
+    <div class="section-label">Session Progress</div>
+    <div class="sprint-bars">
+      <div class="sprint-bar-wrap"><div class="sprint-bar-fill" id="bar0"></div></div>
+      <div class="sprint-bar-wrap"><div class="sprint-bar-fill" id="bar1"></div></div>
+      <div class="sprint-bar-wrap"><div class="sprint-bar-fill" id="bar2"></div></div>
+    </div>
+    <div class="sprint-info" id="sprintInfo">0 of 3 sprints complete</div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- SCORE TAB -->
+
+  <div class="tab-panel hidden" id="tab-score">
+    <div class="section-label">Daily Checklist</div>
+    <button class="check-item" id="check0" data-idx="0">
+      <div class="check-icon" id="checkIcon0">⚡</div>
+      <span class="check-label">Started immediately (no doom-scroll)</span>
+    </button>
+    <button class="check-item" id="check1" data-idx="1">
+      <div class="check-icon" id="checkIcon1">⭐</div>
+      <span class="check-label">Completed Must Win Task</span>
+    </button>
+    <button class="check-item" id="check2" data-idx="2">
+      <div class="check-icon" id="checkIcon2">🔥</div>
+      <span class="check-label">Completed 3 focus sprints</span>
+    </button>
+    <div class="score-summary">
+      <div class="score-big" id="scoreBig">0/3</div>
+      <div class="score-msg" id="scoreMsg">Let's go — start now.</div>
+    </div>
+  </div>
+
+  <!-- WEEK TAB -->
+
+  <div class="tab-panel hidden" id="tab-week">
+    <div class="week-header">
+      <div class="section-label">This Week</div>
+      <div class="week-total" id="weekTotal">0<small>/21</small></div>
+    </div>
+    <div class="card">
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+    <div class="card streak-card">
+      <div>
+        <div class="section-label">Current Streak</div>
+        <div class="streak-num" id="streakNum">🔥 0 days</div>
+      </div>
+      <button class="btn-small" id="streakPlusBtn">+1 Day</button>
+    </div>
+    <div class="card">
+      <div class="section-label">Performance</div>
+      <div class="perf-list" id="perfList"></div>
+    </div>
+  </div>
+
+  <!-- Distraction (always visible) -->
+
+  <div style="padding-top:4px">
+    <button class="distraction-btn" id="distractionBtn">😵 I'm getting distracted</button>
+    <div class="distraction-msg hidden" id="distractionMsg">
+      <div class="distraction-head">Back to the task.</div>
+      <div class="distraction-sub">Just 2 minutes. You can do it.</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ── Constants ──────────────────────────────────────────
+const WORK = 20 * 60;
+const BREAK = 5 * 60;
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const ACCENT = '#f5a623';
+
+// ── State ──────────────────────────────────────────────
+let state = {
+  darkMode: true,
+  tasks: ['','',''],
+  mustWin: null,
+  checks: [false, false, false],
+  sprintCount: 0,
+  streak: 0,
+  weekData: {},
+  today: '',
+};
+
+let timerSeconds = WORK;
+let timerRunning = false;
+let isBreak = false;
+let timerInterval = null;
+let distractionTimeout = null;
+let activeTab = 'tasks';
+
+// ── Storage ────────────────────────────────────────────
+function getToday() {
+  return new Date().toISOString().split('T')[0];
+}
+function getWeekKey() {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const mon = new Date(d.setDate(diff));
+  return mon.toISOString().split('T')[0];
+}
+function load() {
+  try { return JSON.parse(localStorage.getItem('adhd-focus') || '{}'); } catch { return {}; }
+}
+function save() {
+  const wk = getWeekKey();
+  const today = getToday();
+  const score = state.checks.filter(Boolean).length;
+  if (!state.weekData[wk]) state.weekData[wk] = {};
+  state.weekData[wk][today] = score;
+  localStorage.setItem('adhd-focus', JSON.stringify({ ...state, today }));
+}
+
+function initState() {
+  const s = load();
+  const today = getToday();
+  state.darkMode = s.darkMode ?? true;
+  state.streak = s.streak || 0;
+  state.weekData = s.weekData || {};
+  if (s.today === today) {
+    state.tasks = s.tasks || ['','',''];
+    state.mustWin = s.mustWin ?? null;
+    state.checks = s.checks || [false,false,false];
+    state.sprintCount = s.sprintCount || 0;
+  }
+  state.today = today;
+}
+
+// ── Dark mode ──────────────────────────────────────────
+function applyDarkMode() {
+  document.body.classList.toggle('light', !state.darkMode);
+  document.getElementById('darkToggle').textContent = state.darkMode ? '☀' : '☾';
+}
+
+// ── Tasks ──────────────────────────────────────────────
+function renderTasks() {
+  for (let i = 0; i < 3; i++) {
+    const inp = document.getElementById(`task${i}`);
+    const clr = document.getElementById(`clear${i}`);
+    const card = document.getElementById(`taskCard${i}`);
+
+    inp.value = state.tasks[i];
+    clr.classList.toggle('hidden', !state.tasks[i]);
+
+    // Remove old must-win btn if present
+    const oldBtn = card.querySelector('.must-win-btn');
+    if (oldBtn) oldBtn.remove();
+
+    if (state.tasks[i]) {
+      const btn = document.createElement('button');
+      btn.className = 'must-win-btn' + (state.mustWin === i ? ' active' : '');
+      btn.textContent = state.mustWin === i ? '⭐ MUST WIN' : 'Set as Must Win';
+      btn.onclick = () => {
+        state.mustWin = (state.mustWin === i) ? null : i;
+        renderTasks();
+        save();
+      };
+      card.appendChild(btn);
+    }
+  }
+
+  const display = document.getElementById('mustWinDisplay');
+  if (state.mustWin !== null && state.tasks[state.mustWin]) {
+    display.classList.remove('hidden');
+    document.getElementById('mustWinText').textContent = state.tasks[state.mustWin];
+  } else {
+    display.classList.add('hidden');
+  }
+}
+
+// ── Score pill ─────────────────────────────────────────
+function renderScorePill() {
+  const score = state.checks.filter(Boolean).length;
+  for (let i = 0; i < 3; i++) {
+    const dot = document.getElementById(`dot${i}`);
+    dot.style.backgroundColor = i < score ? ACCENT : (state.darkMode ? '#2a2a2e' : '#e0ddd6');
+    dot.style.opacity = i < score ? '1' : '0.3';
+    dot.style.width = '22px';
+    dot.style.height = '22px';
+    dot.style.borderRadius = '4px';
+  }
+  document.getElementById('scoreNum').innerHTML = `${score}<small>/3</small>`;
+  document.getElementById('sprintBadge').innerHTML = `${state.sprintCount}<small>/3+</small>`;
+  document.getElementById('streakBadge').textContent = `🔥 ${state.streak}d`;
+}
+
+// ── Timer ──────────────────────────────────────────────
+const CIRC = 2 * Math.PI * 72; // 452.39
+
+function fmt(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+function renderTimer() {
+  document.getElementById('timerDisplay').textContent = fmt(timerSeconds);
+  document.getElementById('timerMode').textContent = isBreak ? 'BREAK' : 'WORK';
+  document.getElementById('timerLabel').textContent =
+    (isBreak ? '☕ Break Time' : '🔥 Focus Sprint') + ` — Sprint #${state.sprintCount + 1}`;
+
+  const total = isBreak ? BREAK : WORK;
+  const elapsed = total - timerSeconds;
+  const pct = elapsed / total;
+  const offset = CIRC - pct * CIRC;
+
+  const fg = document.getElementById('ringFg');
+  fg.style.strokeDashoffset = offset;
+  fg.style.stroke = isBreak ? '#4ade80' : ACCENT;
+
+  const btn = document.getElementById('startStopBtn');
+  if (timerRunning) {
+    btn.textContent = '⏸ PAUSE';
+    btn.classList.add('paused');
+  } else {
+    btn.textContent = '▶ START';
+    btn.classList.remove('paused');
+  }
+
+  // Sprint bars
+  for (let i = 0; i < 3; i++) {
+    const bar = document.getElementById(`bar${i}`);
+    if (i < state.sprintCount) {
+      bar.style.width = '100%';
+    } else if (i === state.sprintCount && !isBreak && timerRunning) {
+      bar.style.width = (pct * 100) + '%';
+    } else {
+      bar.style.width = '0%';
+    }
+  }
+  document.getElementById('sprintInfo').textContent =
+    `${state.sprintCount} of 3 sprints complete`;
+}
+
+function tickTimer() {
+  timerSeconds--;
+  if (timerSeconds <= 0) {
+    if (!isBreak) {
+      state.sprintCount++;
+      if (state.sprintCount >= 3) {
+        state.checks[2] = true;
+        renderChecks();
+      }
+      save();
+      isBreak = true;
+      timerSeconds = BREAK;
+      // pulse
+      const ring = document.getElementById('ringContainer');
+      ring.classList.add('pulse');
+      setTimeout(() => ring.classList.remove('pulse'), 500);
+    } else {
+      isBreak = false;
+      timerSeconds = WORK;
+    }
+  }
+  renderTimer();
+}
+
+function startStop() {
+  timerRunning = !timerRunning;
+  if (timerRunning) {
+    timerInterval = setInterval(tickTimer, 1000);
+  } else {
+    clearInterval(timerInterval);
+  }
+  renderTimer();
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  isBreak = false;
+  timerSeconds = WORK;
+  renderTimer();
+}
+
+// ── Checks ─────────────────────────────────────────────
+const CHECK_ICONS = ['⚡','⭐','🔥'];
+const SCORE_MSGS = [
+  'Let\'s go — start now.',
+  'Good start. Keep going.',
+  'Almost perfect. One more!',
+  '🔥 Perfect day. Outstanding.'
+];
+const SCORE_COLORS = ['#444','#60a5fa','#a78bfa', ACCENT];
+
+function renderChecks() {
+  const score = state.checks.filter(Boolean).length;
+  for (let i = 0; i < 3; i++) {
+    const item = document.getElementById(`check${i}`);
+    const icon = document.getElementById(`checkIcon${i}`);
+    if (state.checks[i]) {
+      item.classList.add('checked');
+      icon.textContent = '✓';
+    } else {
+      item.classList.remove('checked');
+      icon.textContent = CHECK_ICONS[i];
+    }
+  }
+  const big = document.getElementById('scoreBig');
+  big.textContent = `${score}/3`;
+  big.style.color = SCORE_COLORS[score];
+  document.getElementById('scoreMsg').textContent = SCORE_MSGS[score];
+  renderScorePill();
+}
+
+// ── Week ───────────────────────────────────────────────
+function renderWeek() {
+  const wk = getWeekKey();
+  const today = getToday();
+  const scores = DAYS.map((d, i) => {
+    const date = new Date(wk);
+    date.setDate(date.getDate() + i);
+    const key = date.toISOString().split('T')[0];
+    return { day: d, score: state.weekData[wk]?.[key] ?? null, key };
+  });
+
+  const total = scores.reduce((a, b) => a + (b.score || 0), 0);
+  document.getElementById('weekTotal').innerHTML = `${total}<small>/21</small>`;
+  document.getElementById('streakNum').textContent = `🔥 ${state.streak} days`;
+  document.getElementById('streakBadge').textContent = `🔥 ${state.streak}d`;
+
+  // Bar chart
+  const chart = document.getElementById('barChart');
+  chart.innerHTML = '';
+  const maxH = 72;
+  scores.forEach(({ day, score: s, key }) => {
+    const isToday = key === today;
+    const barH = s === null ? 4 : Math.max(8, (s / 3) * maxH);
+    const barColor = isToday ? ACCENT :
+      s === 3 ? (state.darkMode ? '#374151' : '#d1d5db') :
+      s === 2 ? (state.darkMode ? '#2d3748' : '#e5e7eb') :
+      s === 1 ? (state.darkMode ? '#252535' : '#efefef') :
+      (state.darkMode ? '#1a1a1d' : '#f5f5f5');
+
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    col.innerHTML = `
+      <div class="bar-score-label" style="color:${s !== null ? (isToday ? ACCENT : 'var(--text)') : 'var(--muted)'}">${s !== null ? s : ''}</div>
+      <div class="bar-wrap">
+        <div class="bar" style="height:${barH}px;background:${barColor};opacity:${s === null ? 0.25 : 1}"></div>
+      </div>
+      <div class="bar-day ${isToday ? 'today' : ''}">${day}</div>
+    `;
+    chart.appendChild(col);
+  });
+
+  // Performance
+  const perfItems = [
+    { label: 'Inconsistent', range: '0–3 pts' },
+    { label: 'Building Momentum', range: '4–7 pts' },
+    { label: 'On a Roll', range: '8–11 pts' },
+    { label: 'Locked In', range: '12–15 pts' },
+    { label: 'Unstoppable', range: '16–21 pts' },
+  ];
+  const perfIdx = total >= 16 ? 4 : Math.floor(total / 4);
+  const perfList = document.getElementById('perfList');
+  perfList.innerHTML = '';
+  perfItems.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'perf-item' + (i === perfIdx ? ' active' : '');
+    div.innerHTML = `<span>${i === perfIdx ? '▶' : '·'}</span><span>${p.label}</span><span class="perf-pts">(${p.range})</span>`;
+    perfList.appendChild(div);
+  });
+}
+
+// ── Tab switching ──────────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('hidden', p.id !== `tab-${tab}`));
+  if (tab === 'week') renderWeek();
+}
+
+// ── Distraction ────────────────────────────────────────
+function showDistraction() {
+  clearTimeout(distractionTimeout);
+  const msg = document.getElementById('distractionMsg');
+  msg.classList.remove('hidden');
+  distractionTimeout = setTimeout(() => msg.classList.add('hidden'), 4000);
+}
+
+// ── Init & Events ──────────────────────────────────────
+initState();
+applyDarkMode();
+renderTasks();
+renderScorePill();
+renderChecks();
+renderTimer();
+
+document.getElementById('darkToggle').addEventListener('click', () => {
+  state.darkMode = !state.darkMode;
+  applyDarkMode();
+  renderScorePill();
+  save();
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+// Task inputs
+for (let i = 0; i < 3; i++) {
+  document.getElementById(`task${i}`).addEventListener('input', (e) => {
+    state.tasks[i] = e.target.value;
+    if (!e.target.value && state.mustWin === i) state.mustWin = null;
+    renderTasks();
+    save();
+  });
+  document.getElementById(`clear${i}`).addEventListener('click', () => {
+    state.tasks[i] = '';
+    if (state.mustWin === i) state.mustWin = null;
+    renderTasks();
+    save();
+  });
+}
+
+document.getElementById('startStopBtn').addEventListener('click', startStop);
+document.getElementById('resetBtn').addEventListener('click', resetTimer);
+
+for (let i = 0; i < 3; i++) {
+  document.getElementById(`check${i}`).addEventListener('click', () => {
+    state.checks[i] = !state.checks[i];
+    renderChecks();
+    save();
+  });
+}
+
+document.getElementById('streakPlusBtn').addEventListener('click', () => {
+  const score = state.checks.filter(Boolean).length;
+  if (score > 0) state.streak++;
+  document.getElementById('streakNum').textContent = `🔥 ${state.streak} days`;
+  document.getElementById('streakBadge').textContent = `🔥 ${state.streak}d`;
+  save();
+});
+
+document.getElementById('distractionBtn').addEventListener('click', showDistraction);
+</script>
+
+</body>
+</html>
